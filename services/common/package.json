@@ -1,0 +1,10 @@
+{
+  "name": "@transitops/common",
+  "version": "1.0.0",
+  "description": "Shared middleware and utilities for TransitOps microservices",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.2"
+  }
+}
