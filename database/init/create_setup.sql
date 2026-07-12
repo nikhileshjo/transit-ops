@@ -1,17 +1,17 @@
-CREATE IF NOT EXISTS DATABASE transitops_db;
+CREATE DATABASE IF NOT EXISTS transitops_db;
 
-CREATE IF NOT EXISTS SCHEMA auth;
-CREATE IF NOT EXISTS SCHEMA vehicle;
-CREATE IF NOT EXISTS SCHEMA driver;
-CREATE IF NOT EXISTS SCHEMA trip;
-CREATE IF NOT EXISTS SCHEMA maintenance;
-CREATE IF NOT EXISTS SCHEMA fuel;
-CREATE IF NOT EXISTS SCHEMA expense;
-CREATE IF NOT EXISTS SCHEMA reporting;
-CREATE IF NOT EXISTS IF NOT EXISTS SCHEMA notification;
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE SCHEMA IF NOT EXISTS vehicle;
+CREATE SCHEMA IF NOT EXISTS driver;
+CREATE SCHEMA IF NOT EXISTS trip;
+CREATE SCHEMA IF NOT EXISTS maintenance;
+CREATE SCHEMA IF NOT EXISTS fuel;
+CREATE SCHEMA IF NOT EXISTS expense;
+CREATE SCHEMA IF NOT EXISTS reporting;
+CREATE SCHEMA IF NOT EXISTS notification;
 
 
-CREATE IF NOT EXISTS TABLE vehicle.vehicles (
+CREATE TABLE IF NOT EXISTS vehicle.vehicles (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     registration_number VARCHAR(50) UNIQUE NOT NULL,
     vehicle_name VARCHAR(100) NOT NULL,
@@ -25,7 +25,7 @@ CREATE IF NOT EXISTS TABLE vehicle.vehicles (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE IF NOT EXISTS TABLE driver.drivers (
+CREATE TABLE IF NOT EXISTS driver.drivers (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     license_number VARCHAR(50) UNIQUE NOT NULL,
@@ -39,7 +39,34 @@ CREATE IF NOT EXISTS TABLE driver.drivers (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE IF NOT EXISTS TABLE trip.trips (
+CREATE EXTENSION IF NOT EXISTS btree_gist;
+
+CREATE TABLE IF NOT EXISTS driver.driver_availability_roster (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    driver_id UUID NOT NULL,
+
+    available_from TIMESTAMP NOT NULL,
+    available_to TIMESTAMP NOT NULL,
+
+    availability_status VARCHAR(20) NOT NULL
+        CHECK (availability_status IN ('Available','Unavailable','On Leave','Off Duty','Reserved')),
+
+    reason TEXT,
+
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT fk_driver_availability_roster_driver
+        FOREIGN KEY (driver_id)
+        REFERENCES driver.drivers(id)
+        ON DELETE CASCADE,
+
+    CONSTRAINT chk_driver_availability_dates
+        CHECK (available_from < available_to)
+);
+
+CREATE TABLE IF NOT EXISTS trip.trips (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     vehicle_id UUID NOT NULL,
     driver_id UUID NOT NULL,
@@ -56,7 +83,7 @@ CREATE IF NOT EXISTS TABLE trip.trips (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE IF NOT EXISTS TABLE maintenance.maintenance_logs (
+CREATE TABLE IF NOT EXISTS maintenance.maintenance_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     vehicle_id UUID NOT NULL,
     maintenance_type VARCHAR(100),
@@ -68,7 +95,7 @@ CREATE IF NOT EXISTS TABLE maintenance.maintenance_logs (
     closed_at TIMESTAMP
 );
 
-CREATE IF NOT EXISTS TABLE fuel.fuel_logs (
+CREATE TABLE IF NOT EXISTS fuel.fuel_logs (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     vehicle_id UUID NOT NULL,
     trip_id UUID,
@@ -78,7 +105,7 @@ CREATE IF NOT EXISTS TABLE fuel.fuel_logs (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE IF NOT EXISTS TABLE expense.expenses (
+CREATE TABLE IF NOT EXISTS expense.expenses (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     vehicle_id UUID NOT NULL,
     trip_id UUID,
@@ -89,7 +116,7 @@ CREATE IF NOT EXISTS TABLE expense.expenses (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE IF NOT EXISTS TABLE reporting.fleet_metrics (
+CREATE TABLE IF NOT EXISTS reporting.fleet_metrics (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     metric_date DATE NOT NULL,
     active_vehicles INT,
@@ -100,7 +127,7 @@ CREATE IF NOT EXISTS TABLE reporting.fleet_metrics (
     total_operational_cost NUMERIC(14,2)
 );
 
-CREATE IF NOT EXISTS TABLE notification.notifications (
+CREATE TABLE IF NOT EXISTS notification.notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     recipient VARCHAR(100) NOT NULL,
     subject VARCHAR(200) NOT NULL,
@@ -110,12 +137,12 @@ CREATE IF NOT EXISTS TABLE notification.notifications (
     sent_at TIMESTAMP
 );
 
-CREATE IF NOT EXISTS TABLE auth.roles (
+CREATE TABLE IF NOT EXISTS auth.roles (
     id SERIAL PRIMARY KEY,
     role_name VARCHAR(50) UNIQUE NOT NULL
 );
 
-CREATE IF NOT EXISTS TABLE auth.users (
+CREATE TABLE IF NOT EXISTS auth.users (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
@@ -124,7 +151,7 @@ CREATE IF NOT EXISTS TABLE auth.users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE IF NOT EXISTS TABLE auth.user_roles (
+CREATE TABLE IF NOT EXISTS auth.user_roles (
     user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
     role_id INT REFERENCES auth.roles(id) ON DELETE CASCADE,
     PRIMARY KEY (user_id, role_id)
