@@ -1,29 +1,27 @@
 import React, { useState } from 'react';
-import { User, Lock, Briefcase, AlertCircle, ArrowRight } from 'lucide-react';
+import { Mail, Lock, AlertCircle, ArrowRight } from 'lucide-react';
 
-export default function Login({ onLoginSuccess }) {
-  const [username, setUsername] = useState('');
+export default function Login({ onLoginSuccess, onGoToSignup }) {
+  const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('');
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const roles = [
-    { value: 'Fleet Manager', label: 'Fleet Manager' },
-    { value: 'Dispatcher', label: 'Dispatcher' },
-    { value: 'Safety Officer', label: 'Safety Officer' },
-    { value: 'Financial Analyst', label: 'Financial Analyst' }
-  ];
-
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setErrors({});
     
     // Simple validation
     const newErrors = {};
-    if (!username.trim()) newErrors.username = 'Username is required';
-    if (!password) newErrors.password = 'Password is required';
-    if (!role) newErrors.role = 'Please select your role';
+    if (!email.trim()) {
+      newErrors.email = 'Email address is required';
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+    
+    if (!password) {
+      newErrors.password = 'Password is required';
+    }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
@@ -32,36 +30,39 @@ export default function Login({ onLoginSuccess }) {
 
     setIsSubmitting(true);
 
-    /* 
-      TODO: BACKEND API INTEGRATION
-      Replace this setTimeout mock with your actual authentication fetch call.
-      
-      Example implementation:
-      try {
-        const response = await fetch('http://localhost:5000/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ username, password, role })
-        });
-        
-        if (!response.ok) {
-          const data = await response.json();
-          throw new Error(data.message || 'Authentication failed');
-        }
-        
-        const data = await response.json();
-        // Save token or cookies, then succeed
-        onLoginSuccess({ username, role, token: data.token });
-      } catch (err) {
-        setErrors({ submit: err.message });
-      } finally {
-        setIsSubmitting(false);
+    try {
+      const response = await fetch('http://localhost:3004/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Authentication failed. Please check your credentials.');
       }
-    */
-    setTimeout(() => {
+
+      // Map name to username for backwards compatibility with the dashboard welcome headers
+      onLoginSuccess({
+        id: data.user.id,
+        name: data.user.name,
+        username: data.user.name,
+        email: data.user.email,
+        roles: data.user.roles,
+        token: data.token
+      });
+
+    } catch (err) {
+      setErrors({ submit: err.message });
+    } finally {
       setIsSubmitting(false);
-      onLoginSuccess({ username, role });
-    }, 1200);
+    }
   };
 
   return (
@@ -86,27 +87,46 @@ export default function Login({ onLoginSuccess }) {
           </p>
         </div>
 
+        {errors.submit && (
+          <div style={{ 
+            padding: '12px 16px', 
+            background: 'rgba(239, 68, 68, 0.1)', 
+            border: '1px solid var(--color-error)', 
+            borderRadius: 'var(--radius-md)', 
+            color: 'var(--color-error)',
+            fontSize: '0.9rem',
+            marginBottom: '20px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            textAlign: 'left'
+          }}>
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            <span>{errors.submit}</span>
+          </div>
+        )}
+
         <form onSubmit={handleLogin} noValidate>
-          {/* Username Input */}
+          {/* Email Input */}
           <div className="form-group">
-            <label className="form-label" htmlFor="username">Username</label>
+            <label className="form-label" htmlFor="email">Email Address</label>
             <div className="input-container">
-              <User size={18} className="input-icon" />
+              <Mail size={18} className="input-icon" />
               <input
-                id="username"
-                type="text"
+                id="email"
+                type="email"
                 className="form-input"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Enter your email address"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 style={{
-                  borderColor: errors.username ? 'var(--color-error)' : 'var(--border-light)'
+                  borderColor: errors.email ? 'var(--color-error)' : 'var(--border-light)'
                 }}
               />
             </div>
-            {errors.username && (
+            {errors.email && (
               <p style={{ color: 'var(--color-error)', fontSize: '0.8rem', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <AlertCircle size={12} /> {errors.username}
+                <AlertCircle size={12} /> {errors.email}
               </p>
             )}
           </div>
@@ -135,36 +155,6 @@ export default function Login({ onLoginSuccess }) {
             )}
           </div>
 
-          {/* Role Dropdown */}
-          <div className="form-group">
-            <label className="form-label" htmlFor="role">Role</label>
-            <div className="select-wrapper">
-              <Briefcase size={18} className="input-icon" />
-              <select
-                id="role"
-                className="form-select"
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                style={{
-                  borderColor: errors.role ? 'var(--color-error)' : 'var(--border-light)'
-                }}
-              >
-                <option value="" disabled hidden>Select operations role</option>
-                {roles.map((r) => (
-                  <option key={r.value} value={r.value}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-              <div className="select-arrow">▼</div>
-            </div>
-            {errors.role && (
-              <p style={{ color: 'var(--color-error)', fontSize: '0.8rem', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                <AlertCircle size={12} /> {errors.role}
-              </p>
-            )}
-          </div>
-
           {/* Submit Button */}
           <button 
             type="submit" 
@@ -181,6 +171,26 @@ export default function Login({ onLoginSuccess }) {
             )}
           </button>
         </form>
+
+        {/* Link to Signup */}
+        <div style={{ marginTop: '24px', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+          Don't have an account?{' '}
+          <button
+            type="button"
+            onClick={onGoToSignup}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: 'var(--color-primary)',
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: 0,
+              textDecoration: 'underline'
+            }}
+          >
+            Sign Up
+          </button>
+        </div>
 
         {/* Spin Keyframe for Button Spinner */}
         <style dangerouslySetInnerHTML={{__html: `

@@ -17,7 +17,7 @@ import { DollarSign, TrendingUp, BarChart2, PieChart, Briefcase, LogOut } from '
  *    - Purpose: Fetch fuel purchase values, receipts matching, and taxation compliance documents.
  *    - Service: `fuel-service`
  */
-export default function FinancialAnalystDashboard({ user, onLogout }) {
+export default function FinancialAnalystDashboard({ user, onLogout, onSwitchRole }) {
   /* 
     TODO: STATE FOR BACKEND INTEGRATION
     Uncomment and use these states to store dynamic data fetched from the microservices.
@@ -79,12 +79,19 @@ export default function FinancialAnalystDashboard({ user, onLogout }) {
             <span className="text-gradient" style={{ backgroundImage: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}>Financial Intelligence Hub</span>
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Welcome back, {user.username} | Currency Node: Active
+            Welcome back, {user.name || user.username} | Currency Node: Active
           </p>
         </div>
-        <button onClick={onLogout} className="btn-secondary" style={{ color: 'var(--color-error)' }}>
-          <LogOut size={16} /> Logout
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {user.roles && user.roles.length > 1 && (
+            <button onClick={onSwitchRole} className="btn-secondary">
+              Switch Role
+            </button>
+          )}
+          <button onClick={onLogout} className="btn-secondary" style={{ color: 'var(--color-error)' }}>
+            <LogOut size={16} /> Logout
+          </button>
+        </div>
       </header>
 
       {/* Quick Summary Cards */}

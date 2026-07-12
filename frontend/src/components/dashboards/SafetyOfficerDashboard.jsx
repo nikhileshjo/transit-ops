@@ -17,7 +17,7 @@ import { Shield, Eye, AlertCircle, FileText, CheckCircle, LogOut } from 'lucide-
  *    - Purpose: Fetch driver HOS (Hours of Service) violations, ELD compliance flags, and license expirations.
  *    - Service: `driver-service`
  */
-export default function SafetyOfficerDashboard({ user, onLogout }) {
+export default function SafetyOfficerDashboard({ user, onLogout, onSwitchRole }) {
   /* 
     TODO: STATE FOR BACKEND INTEGRATION
     Uncomment and use these states to store dynamic data fetched from the microservices.
@@ -79,12 +79,19 @@ export default function SafetyOfficerDashboard({ user, onLogout }) {
             <span className="text-gradient" style={{ backgroundImage: 'linear-gradient(135deg, #10b981 0%, #06b6d4 100%)' }}>Safety & Compliance Center</span>
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Welcome back, {user.username} | Compliance Shield: Active
+            Welcome back, {user.name || user.username} | Compliance Shield: Active
           </p>
         </div>
-        <button onClick={onLogout} className="btn-secondary" style={{ color: 'var(--color-error)' }}>
-          <LogOut size={16} /> Logout
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {user.roles && user.roles.length > 1 && (
+            <button onClick={onSwitchRole} className="btn-secondary">
+              Switch Role
+            </button>
+          )}
+          <button onClick={onLogout} className="btn-secondary" style={{ color: 'var(--color-error)' }}>
+            <LogOut size={16} /> Logout
+          </button>
+        </div>
       </header>
 
       {/* Quick Summary Cards */}

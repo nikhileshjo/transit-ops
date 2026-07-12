@@ -20,7 +20,7 @@ import { Truck, Navigation, Settings, Fuel, AlertTriangle, LogOut } from 'lucide
  * 4. WebSocket: /ws/telemetry
  *    - Purpose: Real-time tracking and GPS coordinates of vehicles on the map.
  */
-export default function FleetManagerDashboard({ user, onLogout }) {
+export default function FleetManagerDashboard({ user, onLogout, onSwitchRole }) {
   /* 
     TODO: STATE FOR BACKEND INTEGRATION
     Uncomment and use these states to store dynamic data fetched from the microservices.
@@ -82,12 +82,19 @@ export default function FleetManagerDashboard({ user, onLogout }) {
             <span className="text-gradient">Fleet Manager Portal</span>
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Welcome back, {user.username} | System Status: Optimal
+            Welcome back, {user.name || user.username} | System Status: Optimal
           </p>
         </div>
-        <button onClick={onLogout} className="btn-secondary" style={{ color: 'var(--color-error)' }}>
-          <LogOut size={16} /> Logout
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {user.roles && user.roles.length > 1 && (
+            <button onClick={onSwitchRole} className="btn-secondary">
+              Switch Role
+            </button>
+          )}
+          <button onClick={onLogout} className="btn-secondary" style={{ color: 'var(--color-error)' }}>
+            <LogOut size={16} /> Logout
+          </button>
+        </div>
       </header>
 
       {/* Quick Summary Cards */}

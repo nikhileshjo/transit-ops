@@ -21,7 +21,7 @@ import { Calendar, Users, MapPin, Radio, Clock, LogOut } from 'lucide-react';
  *    - Purpose: Send SMS/Email notifications to drivers about newly assigned trips.
  *    - Service: `notification-service`
  */
-export default function DispatcherDashboard({ user, onLogout }) {
+export default function DispatcherDashboard({ user, onLogout, onSwitchRole }) {
   /* 
     TODO: STATE FOR BACKEND INTEGRATION
     Uncomment and use these states to store dynamic data fetched from the microservices.
@@ -111,12 +111,19 @@ export default function DispatcherDashboard({ user, onLogout }) {
             <span className="text-gradient-cyan">Dispatcher Control Room</span>
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginTop: '4px' }}>
-            Welcome back, {user.username} | Communications Status: Online
+            Welcome back, {user.name || user.username} | Communications Status: Online
           </p>
         </div>
-        <button onClick={onLogout} className="btn-secondary" style={{ color: 'var(--color-error)' }}>
-          <LogOut size={16} /> Logout
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          {user.roles && user.roles.length > 1 && (
+            <button onClick={onSwitchRole} className="btn-secondary">
+              Switch Role
+            </button>
+          )}
+          <button onClick={onLogout} className="btn-secondary" style={{ color: 'var(--color-error)' }}>
+            <LogOut size={16} /> Logout
+          </button>
+        </div>
       </header>
 
       {/* Quick Summary Cards */}
