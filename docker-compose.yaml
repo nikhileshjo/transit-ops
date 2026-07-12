@@ -34,11 +34,5 @@ services:
     depends_on:
       - db
 
-  server:
-    image: alpine:3.22
-    container_name: linux-server
-    command: tail -f /dev/null
-    restart: unless-stopped 
-
 volumes:
   db_data:
